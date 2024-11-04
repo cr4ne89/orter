@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  api:
+    build: ./api
+    container_name: api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=debug
+      - LOG_CONSOLE=true
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=orter_db
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - PLATFORM=linux/amd64
+    platform: linux/amd64
+    container_name: web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - api
+
+  db:
+    image: postgres:16.2-alpine
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: orter_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    build:
+      context: .
+      dockerfile: ./migrations/Dockerfile
+    container_name: migrate
+    volumes:
+      - ./migrations:/migrations
+      - ./api:/app
+    depends_on:
+      - db
+
+volumes:
+  db_data:
