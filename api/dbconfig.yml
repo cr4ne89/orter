@@ -1,0 +1,4 @@
+development:
+  dialect: postgres
+  datasource: "postgres://postgres:password@db:5432/orter_db?sslmode=disable"
+  dir: /migrations
